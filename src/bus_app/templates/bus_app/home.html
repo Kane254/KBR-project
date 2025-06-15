@@ -1,0 +1,17 @@
+{# bus_app/templates/bus_app/home.html #}
+{% extends 'bus_app/base.html' %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+    <h1>Welcome to BusConnect!</h1>
+    <p>Your one-stop solution for booking bus tickets easily.</p>
+    <p>Find your next trip and book your seat in minutes.</p>
+    <p>
+        <a href="{% url 'bus_list' %}">
+            <button style="padding: 10px 20px; font-size: 1.1em; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                Find Available Buses
+            </button>
+        </a>
+    </p>
+{% endblock %}

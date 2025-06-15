@@ -1,0 +1,36 @@
+{# bus_app/templates/bus_app/my_bookings.html #}
+{% extends 'bus_app/base.html' %}
+
+{% block title %}My Bookings{% endblock %}
+
+{% block content %}
+    <h1>My Bookings</h1>
+
+    {% if user_bookings %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Trip Details</th>
+                    <th>Departure</th>
+                    <th>Bus</th>
+                    <th>Seat Number</th>
+                    <th>Booking Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in user_bookings %}
+                    <tr>
+                        <td>{{ booking.trip.route.origin }} to {{ booking.trip.route.destination }}</td>
+                        <td>{{ booking.trip.departure_time|date:"Y-m-d H:i" }}</td>
+                        <td>{{ booking.trip.bus.bus_number }}</td>
+                        <td>{{ booking.seat_number }}</td>
+                        <td>{{ booking.booking_date|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>You have no active bookings.</p>
+        <p><a href="{% url 'bus_list' %}">Find a trip to book!</a></p>
+    {% endif %}
+{% endblock %}
