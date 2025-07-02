@@ -83,6 +83,11 @@ DATABASES = {
 }
 
 
+<<<<<<< HEAD
+ALLOWED_HOSTS = ['*']
+
+=======
+>>>>>>> 8dfb662929f8c79a56f797a36934a33fdd74e009
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
