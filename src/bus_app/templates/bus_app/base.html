@@ -1,108 +1,139 @@
-{# bus_app/templates/bus_app/base.html #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bus Booking System - {% block title %}{% endblock %}</title>
+    <title>{% block title %}Bus Bookng{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
-        .navbar {
-            background-color: #333;
-            overflow: hidden;
-            padding: 10px 20px;
-            color: white;
+        /* Global Styles (moved from styles.css) */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-image: url('https://gst-contracts.s3.ap-southeast-1.amazonaws.com/uploads/bcc/cms/asset/avatar/324800/banner6.jpg'); /* Your bus background image */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed; /* Keeps background fixed when scrolling */
+            color: #333;
+            min-height: 100vh;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
         }
-        .navbar a {
-            float: left;
-            display: block;
-            color: white;
-            text-align: center;
-            padding: 14px 20px;
-            text-decoration: none;
-            font-size: 17px;
-        }
-        .navbar a:hover {
-            background-color: #ddd;
-            color: black;
-        }
-        .navbar .brand {
-            font-size: 24px;
-            font-weight: bold;
-        }
-        .navbar .auth-links {
-            display: flex;
-            align-items: center;
-        }
-        .navbar .auth-links span {
-            margin-right: 15px;
-            color: white;
-        }
-        .content {
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
-            margin: 0 20px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
+
+        .content-wrapper {
+            background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent white background for content */
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            flex-grow: 1;
+        }
+
+        /* Base button styles */
+        .btn {
+            padding-left: 1rem; /* px-4 */
+            padding-right: 1rem; /* px-4 */
+            padding-top: 0.5rem; /* py-2 */
+            padding-bottom: 0.5rem; /* py-2 */
+            border-radius: 0.375rem; /* rounded-md */
+            font-weight: 600; /* font-semibold */
+            transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter; /* transition-colors */
+            transition-duration: 200ms; /* duration-200 */
+        }
+        .btn-primary {
+            background-color: #2563eb; /* bg-blue-600 */
+            color: #ffffff; /* text-white */
+        }
+        .btn-primary:hover {
+            background-color: #1d4ed8; /* hover:bg-blue-700 */
+        }
+        .btn-secondary {
+            background-color: #d1d5db; /* bg-gray-300 */
+            color: #374151; /* text-gray-800 */
+        }
+        .btn-secondary:hover {
+            background-color: #9ca3af; /* hover:bg-gray-400 */
+        }
+
+        /* Messages */
         .messages {
             list-style: none;
             padding: 0;
-            margin: 10px 20px;
+            margin-bottom: 20px;
         }
         .messages li {
-            padding: 10px;
-            margin-bottom: 5px;
-            border-radius: 4px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            font-weight: bold;
         }
-        .messages .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .messages .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .messages .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-        form { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9; }
-        form p { margin: 10px 0; }
-        form button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        form button:hover { background-color: #0056b3; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        table th, table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        table th { background-color: #f2f2f2; }
+        .messages .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .messages .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .messages .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .messages .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
     </style>
 </head>
-<body>
-    <div class="navbar">
-        <div class="brand"><a href="{% url 'home' %}">BusConnect</a></div>
-        <div>
-            <a href="{% url 'home' %}">Home</a>
-            <a href="{% url 'bus_list' %}">Find Trips</a>
-            {% if user.is_authenticated %}
-                <a href="{% url 'my_bookings' %}">My Bookings</a>
-            {% endif %}
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <nav class="bg-blue-800 p-4 shadow-lg">
+        <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
+            <a href="{% url 'home' %}" class="text-white text-2xl font-bold rounded-md p-2 hover:bg-blue-700 transition-colors duration-300">Bus Connect</a>
+            <div class="space-x-2 sm:space-x-4 flex flex-wrap justify-center items-center">
+                <a href="{% url 'home' %}" class="text-white hover:text-blue-200 px-3 py-2 rounded-md transition-colors duration-300">Home</a>
+                <a href="{% url 'about_us' %}" class="text-white hover:text-blue-200 px-3 py-2 rounded-md transition-colors duration-300">About Us</a> {# New Link #}
+                <a href="{% url 'contact_us' %}" class="text-white hover:text-blue-200 px-3 py-2 rounded-md transition-colors duration-300">Contact Us</a> {# New Link #}
+                {% if user.is_authenticated %}
+                    <span class="text-white text-lg px-2 py-1">Hello, {{ user.username }}!</span>
+                    <a href="{% url 'my_bookings' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-semibold transition-colors duration-300 shadow-md">My Bookings</a>
+                    <a href="{% url 'logout' %}" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md font-semibold transition-colors duration-300 shadow-md">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md font-semibold transition-colors duration-300 shadow-md">Login</a>
+                    <a href="{% url 'register' %}" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md font-semibold transition-colors duration-300 shadow-md">Register</a>
+                {% endif %}
+            </div>
         </div>
-        <div class="auth-links">
-            {% if user.is_authenticated %}
-                <span>Hello, {{ user.username }}</span>
-                <a href="{% url 'logout' %}">Logout</a>
-            {% else %}
-                <a href="{% url 'login' %}">Login</a>
-                {# Add a link for registration if you implement it #}
+    </nav>
+
+    <div class="container mx-auto mt-8 mb-8 flex-grow">
+        <div class="content-wrapper">
+            {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {% endfor %}
+                </ul>
             {% endif %}
+            {% block content %}
+            <!-- Content goes here -->
+            {% endblock content %}
         </div>
     </div>
 
-    <ul class="messages">
-        {% for message in messages %}
-            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
-                {{ message }}
-            </li>
-        {% endfor %}
-    </ul>
-
-    <div class="content">
-        {% block content %}
-        {# Page specific content will go here #}
-        {% endblock %}
-    </div>
+    <footer class="bg-blue-800 text-white p-4 text-center mt-auto shadow-inner">
+        <div class="container mx-auto text-sm">
+            &copy; 2025 Bus Connect. All rights reserved.
+        </div>
+    </footer>
 </body>
 </html>

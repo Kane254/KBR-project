@@ -1,16 +1,16 @@
-# bus_app/urls.py
+# booking_app/urls.py
+
 from django.urls import path
 from . import views
-from django.contrib.auth import views as auth_views # Import auth views for login/logout
 
 urlpatterns = [
-    path('', views.home, name='home'),
-    path('buses/', views.bus_list, name='bus_list'),
-    path('book/<int:trip_id>/', views.book_trip, name='book_trip'),
-    path('my_bookings/', views.my_bookings, name='my_bookings'),
-
-    # Auth URLs
-    path('login/', auth_views.LoginView.as_view(template_name='bus_app/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
-    # You'd typically add a registration view here too
+    path('', views.home_view, name='home'),
+    path('register/', views.register_view, name='register'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    path('bus/<int:bus_id>/', views.bus_detail_view, name='bus_detail'),
+    path('bus/<int:bus_id>/book/', views.book_seats_view, name='book_seats'),
+    path('my_bookings/', views.my_bookings_view, name='my_bookings'),
+    path('about_us/', views.about_us_view, name='about_us'),       # New URL
+    path('contact_us/', views.contact_us_view, name='contact_us'),
 ]

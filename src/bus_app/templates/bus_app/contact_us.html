@@ -1,0 +1,27 @@
+{% extends 'bus_app/base.html' %}
+
+{% block title %}Contact Us{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-xl border border-gray-200">
+    <h1 class="text-4xl font-bold text-center mb-8 text-blue-800">Contact Us</h1>
+
+    <div class="text-gray-700 leading-relaxed space-y-6">
+        <p>Have questions, feedback, or need assistance? We're here to help! Please reach out to us using the information below:</p>
+
+        <h2 class="text-2xl font-bold text-blue-700 mt-8 mb-4">Our Contact Information</h2>
+        <ul class="list-disc list-inside space-y-2">
+            <li><strong>Email:</strong> <a href="mailto:support@busbook.com" class="text-blue-600 hover:underline">support@busbook.com</a></li>
+            <li><strong>Phone:</strong> +254 114870504</li>
+            <li><strong>Address:</strong> 123 Bus Lane, Nairobi, Kenya (Dummy Address)</li>
+        </ul>
+
+        <h2 class="text-2xl font-bold text-blue-700 mt-8 mb-4">Business Hours</h2>
+        <p>Monday - Friday: 9:00 AM - 5:00 PM EAT</p>
+        <p>Saturday: 10:00 AM - 2:00 PM EAT</p>
+        <p>Sunday: Closed</p>
+
+        <p class="mt-8 text-center text-lg font-semibold text-blue-800">We look forward to hearing from you!</p>
+    </div>
+</div>
+{% endblock content %}

@@ -1,36 +1,57 @@
-{# bus_app/templates/bus_app/my_bookings.html #}
-{% extends 'bus_app/base.html' %}
+{% extends 'bus_app/base.html' %} {# Ensure this extends the correct base.html path #}
 
 {% block title %}My Bookings{% endblock %}
 
 {% block content %}
-    <h1>My Bookings</h1>
+<h1 class="text-4xl font-bold text-center mb-8 text-blue-800">My Booked Trips</h1>
 
-    {% if user_bookings %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Trip Details</th>
-                    <th>Departure</th>
-                    <th>Bus</th>
-                    <th>Seat Number</th>
-                    <th>Booking Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for booking in user_bookings %}
-                    <tr>
-                        <td>{{ booking.trip.route.origin }} to {{ booking.trip.route.destination }}</td>
-                        <td>{{ booking.trip.departure_time|date:"Y-m-d H:i" }}</td>
-                        <td>{{ booking.trip.bus.bus_number }}</td>
-                        <td>{{ booking.seat_number }}</td>
-                        <td>{{ booking.booking_date|date:"Y-m-d H:i" }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>You have no active bookings.</p>
-        <p><a href="{% url 'bus_list' %}">Find a trip to book!</a></p>
-    {% endif %}
+<style>
+    body {
+        background-image: url("https://img.autocarpro.in/autocarpro/99fa5a61-b079-4491-a249-2c054be8586d_JBM-bus.jpg?w=750&h=490&q=75&c=1");
+    }
+
+</style>
+{% if bookings %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for booking in bookings %}
+            <div class="bg-white p-6 rounded-lg shadow-xl border border-gray-200 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-3">Booking ID: <span class="text-blue-600">{{ booking.id }}</span></h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-700">Bus:</strong> <span class="font-medium">{{ booking.bus.name }}</span></p>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-700">Route:</strong> <span class="font-medium">{{ booking.bus.route }}</span></p>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-700">Departure:</strong> <span class="font-medium">{{ booking.bus.departure_time|date:"F j, Y P" }}</span></p>
+                    <p class="text-gray-700 mb-1 flex items-center flex-wrap">
+                        <strong class="text-blue-700">Seats Booked:</strong>
+                        {% for seat in booking.booked_seats.all %}
+                            <span class="inline-block bg-blue-100 text-blue-800 text-sm font-semibold px-2.5 py-0.5 rounded-full mr-1 mb-1 shadow-sm">{{ seat.seat_number }}</span>
+                        {% empty %}
+                            <span class="text-red-500">No seats recorded.</span>
+                        {% endfor %}
+                    </p>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-700">Number of Seats:</strong> <span class="font-medium">{{ booking.booked_seats.count }}</span></p>
+                    <p class="text-gray-700 text-xl font-bold mt-2"><strong class="text-green-700">Total Price:</strong> Ksh {{ booking.total_price|floatformat:2 }}</p>
+                    {% if booking.discount_applied %}
+                        <p class="text-green-600 font-semibold mt-1">10% Discount Applied!</p>
+                    {% endif %}
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <p class="text-gray-700"><strong>Payment Status:</strong>
+                        <span class="font-bold px-3 py-1 rounded-full text-sm
+                            {% if booking.payment_status == 'COMPLETED' %}bg-green-100 text-green-800
+                            {% elif booking.payment_status == 'PENDING' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ booking.payment_status }}
+                        </span>
+                    </p>
+                    <p class="text-gray-500 text-sm mt-2">Booked on: {{ booking.booking_time|date:"F j, Y P H:i" }}</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="flex flex-col items-center justify-center py-20">
+        <p class="text-center text-gray-600 text-2xl mb-4">You haven't booked any trips yet.</p>
+        <a href="{% url 'home' %}" class="btn btn-primary py-3 px-6 text-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300">Start booking now!</a>
+    </div>
+{% endif %}
 {% endblock %}

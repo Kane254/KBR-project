@@ -1,0 +1,152 @@
+{% extends 'bus_app/base.html' %}
+
+{% block title %}Book Seats for {{ bus.name }}{% endblock %}
+
+{% block content %}
+<h1 class="text-4xl font-bold text-center mb-8 text-blue-800">Select Seats for {{ bus.name }}</h1>
+<p class="text-center text-gray-600 mb-6">Route: {{ bus.route }} | Departure: {{ bus.departure_time|date:"F j, Y P" }} | Fare: Ksh {{ bus.fare_per_seat }}/seat</p>
+
+<div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-xl border border-gray-200">
+    <div class="flex justify-center items-center mb-6 space-x-4">
+        <div class="flex items-center">
+            <div class="w-6 h-6 bg-gray-300 rounded-md mr-2"></div>
+            <span>Available</span>
+        </div>
+        <div class="flex items-center">
+            <div class="w-6 h-6 bg-red-500 rounded-md mr-2"></div>
+            <span>Booked</span>
+        </div>
+        <div class="flex items-center">
+            <div class="w-6 h-6 bg-blue-500 rounded-md mr-2"></div>
+            <span>Selected</span>
+        </div>
+    </div>
+
+    <div class="bus-layout grid grid-cols-4 gap-4 p-6 bg-gray-100 rounded-lg border border-gray-300">
+        <!-- Driver's Area / Front -->
+        <div class="col-span-4 text-center py-4 bg-gray-200 rounded-md shadow-inner mb-4">
+            <span class="font-bold text-gray-700">Front of Bus / Driver</span>
+        </div>
+
+        {% for seat in seat_layout %}
+            <div class="seat-wrapper flex justify-center items-center">
+                <div
+                    class="seat w-16 h-16 flex items-center justify-center rounded-md cursor-pointer
+                           {% if seat.is_booked %} bg-red-500 text-white cursor-not-allowed {% else %} bg-gray-300 text-gray-800 hover:bg-gray-400 transition-colors {% endif %}"
+                    data-seat-id="{{ seat.id }}"
+                    data-seat-number="{{ seat.number }}"
+                    data-is-booked="{{ seat.is_booked|lower }}"
+                >
+                    <span class="font-semibold text-lg">{{ seat.number }}</span>
+                </div>
+            </div>
+            {% if forloop.counter|divisibleby:2 and not forloop.last %}
+                <!-- Add an aisle space after every two seats -->
+                <div class="col-span-2"></div>
+            {% endif %}
+        {% endfor %}
+
+        <!-- Back of Bus -->
+        <div class="col-span-4 text-center py-4 bg-gray-200 rounded-md shadow-inner mt-4">
+            <span class="font-bold text-gray-700">Back of Bus</span>
+        </div>
+    </div>
+
+    <form id="bookingForm" action="{% url 'book_seats' bus.id %}" method="POST" class="mt-8">
+        {% csrf_token %}
+        <input type="hidden" name="selected_seat_ids" id="selectedSeatIdsInput">
+
+        <div class="flex justify-between items-center mb-6">
+            <p class="text-xl font-semibold text-gray-800">
+                Selected Seats: <span id="selectedSeatsDisplay" class="font-bold text-blue-600">None</span>
+            </p>
+            <p class="text-xl font-semibold text-gray-800">
+                Total Price: <span id="totalPriceDisplay" class="font-bold text-green-600">Ksh 0.00</span>
+            </p>
+        </div>
+
+        <button type="submit" id="bookSeatsBtn" class="w-full btn btn-primary py-3 text-xl" disabled>
+            Book Selected Seats
+        </button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const seats = document.querySelectorAll('.seat');
+        const selectedSeatIdsInput = document.getElementById('selectedSeatIdsInput');
+        const selectedSeatsDisplay = document.getElementById('selectedSeatsDisplay');
+        const totalPriceDisplay = document.getElementById('totalPriceDisplay');
+        const bookSeatsBtn = document.getElementById('bookSeatsBtn');
+
+        let selectedSeats = new Set(); // Stores seat IDs
+
+        const farePerSeat = parseFloat("{{ bus.fare_per_seat }}"); // Get fare from Django context
+
+        function updateBookingDetails() {
+            const numSelected = selectedSeats.size;
+            let totalPrice = numSelected * farePerSeat;
+            let discountApplied = false;
+
+            if (numSelected > 5) {
+                totalPrice *= 0.90; // Apply 10% discount
+                discountApplied = true;
+            }
+
+            // Update selected seats display
+            const seatNumbers = Array.from(selectedSeats).map(id => {
+                const seatElement = document.querySelector(`[data-seat-id="${id}"]`);
+                return seatElement ? seatElement.dataset.seatNumber : '';
+            }).filter(Boolean).join(', ');
+            selectedSeatsDisplay.textContent = seatNumbers || 'None';
+
+            // Update total price display
+            totalPriceDisplay.textContent = `Ksh ${totalPrice.toFixed(2)}`;
+            if (discountApplied) {
+                totalPriceDisplay.innerHTML += ' <span class="text-sm text-red-500">(10% Discount Applied!)</span>';
+            }
+
+            // Enable/disable book button
+            if (numSelected > 0) {
+                bookSeatsBtn.removeAttribute('disabled');
+            } else {
+                bookSeatsBtn.setAttribute('disabled', 'disabled');
+            }
+        }
+
+        seats.forEach(seat => {
+            if (seat.dataset.isBooked === 'false') { // Only interact with available seats
+                seat.addEventListener('click', function() {
+                    const seatId = parseInt(this.dataset.seatId);
+
+                    if (selectedSeats.has(seatId)) {
+                        // Deselect seat
+                        selectedSeats.delete(seatId);
+                        this.classList.remove('bg-blue-500', 'text-white');
+                        this.classList.add('bg-gray-300', 'text-gray-800', 'hover:bg-gray-400');
+                    } else {
+                        // Select seat
+                        selectedSeats.add(seatId);
+                        this.classList.remove('bg-gray-300', 'text-gray-800', 'hover:bg-gray-400');
+                        this.classList.add('bg-blue-500', 'text-white');
+                    }
+                    updateBookingDetails();
+                });
+            }
+        });
+
+        // Update hidden input field before form submission
+        document.getElementById('bookingForm').addEventListener('submit', function(event) {
+            if (selectedSeats.size === 0) {
+                alert('Please select at least one seat to book.'); // Use a custom modal in production
+                event.preventDefault(); // Stop form submission
+                return;
+            }
+            selectedSeatIdsInput.value = Array.from(selectedSeats).join(',');
+        });
+
+        // Initial update on page load
+        updateBookingDetails();
+    });
+</script>
+{% endblock %}

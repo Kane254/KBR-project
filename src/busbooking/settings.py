@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'bus_app',
 ]
 
+
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -119,6 +121,36 @@ STATIC_URL = 'static/'
 
 LOGIN_REDIRECT_URL = '/' # Redirect to home after successful login
 LOGOUT_REDIRECT_URL = '/' # Redirect to home after logout
+LOGIN_URL = 'login' # Name of your login URL pattern
+LOGOUT_REDIRECT_URL = 'logout_success'
+
+# Optional: Add this if you want to explicitly declare your authentication backend
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# bus_booking_project/settings.py
+
+import os
+
+# ... other settings ...
+
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'), # Where you'll put your static files
+]
+
+# Email settings (for dummy email sending)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # Prints emails to console
+# For real emails, you'd use:
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'nyamaikennedy95@gmail.com' # Example for SendGrid
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'Kane'
+EMAIL_HOST_PASSWORD = 'xmbb xknc ojap iytv'
+DEFAULT_FROM_EMAIL = 'nyamaikennedy95@gmail.com' # Your sender email address
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
