@@ -9,7 +9,11 @@ from django.conf import settings
 from django.db import transaction
 from django.contrib import messages
 from decimal import Decimal
+<<<<<<< HEAD
 from django.http import HttpResponse
+=======
+from django.http import HttpResponse # Import HttpResponse for generic error response
+>>>>>>> cbe2f47e209aa82f888c69a63d2550dcd84878da
 
 from .models import Bus, Seat, Booking
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
@@ -28,6 +32,10 @@ def register_view(request):
             login(request, user)
             messages.success(request, "Registration successful. Welcome!")
 
+<<<<<<< HEAD
+=======
+            # --- Send Welcome Email ---
+>>>>>>> cbe2f47e209aa82f888c69a63d2550dcd84878da
             subject = "Welcome to BusBook!"
             message = (
                 f"Hello {user.username},\n\n"
@@ -43,7 +51,11 @@ def register_view(request):
                     message,
                     settings.DEFAULT_FROM_EMAIL,
                     [user.email],
+<<<<<<< HEAD
                     fail_silently=False,
+=======
+                    fail_silently=False, # Set to True in production to avoid crashing on email failure
+>>>>>>> cbe2f47e209aa82f888c69a63d2550dcd84878da
                 )
                 messages.info(request, "A welcome email has been sent to your registered email address.")
             except Exception as e:
@@ -90,6 +102,7 @@ def home_view(request):
 
 @login_required
 def bus_detail_view(request, bus_id):
+<<<<<<< HEAD
     try:
         bus = get_object_or_404(Bus, id=bus_id)
         seats = Seat.objects.filter(bus=bus).order_by('seat_number')
@@ -102,12 +115,41 @@ def bus_detail_view(request, bus_id):
 
         booked_seat_numbers = set(seats.filter(is_booked=True).values_list('seat_number', flat=True))
 
+=======
+    """
+    Displays the seat layout for a specific bus and handles seat selection.
+    Includes error handling to ensure an HttpResponse is always returned.
+    """
+    try:
+        bus = get_object_or_404(Bus, id=bus_id)
+        # Fetch all seats for the bus, ordered by seat number
+        seats = Seat.objects.filter(bus=bus).order_by('seat_number')
+
+        # If seats don't exist yet for this bus, create them (for initial setup)
+        # This block is crucial after a fresh database, as it populates the seats.
+        if not seats.exists() or seats.count() < bus.capacity:
+            with transaction.atomic():
+                for i in range(1, bus.capacity + 1):
+                    # Use get_or_create to avoid creating duplicates if run multiple times
+                    Seat.objects.get_or_create(bus=bus, seat_number=i)
+            # Re-fetch seats after creation to ensure the 'seats' queryset is up-to-date
+            seats = Seat.objects.filter(bus=bus).order_by('seat_number')
+
+        # Determine which seats are booked
+        booked_seat_numbers = set(seats.filter(is_booked=True).values_list('seat_number', flat=True))
+
+        # Prepare seat data for the template
+>>>>>>> cbe2f47e209aa82f888c69a63d2550dcd84878da
         seat_layout = []
         for seat in seats:
             seat_layout.append({
                 'number': seat.seat_number,
                 'is_booked': seat.is_booked,
+<<<<<<< HEAD
                 'id': seat.id
+=======
+                'id': seat.id # Pass seat ID for easy lookup in booking
+>>>>>>> cbe2f47e209aa82f888c69a63d2550dcd84878da
             })
 
         context = {
@@ -118,9 +160,19 @@ def bus_detail_view(request, bus_id):
         return render(request, 'bus_app/bus_detail.html', context)
 
     except Bus.DoesNotExist:
+<<<<<<< HEAD
         messages.error(request, "The requested bus does not exist.")
         return redirect('home')
     except Exception as e:
+=======
+        # get_object_or_404 raises Http404, which Django handles by default.
+        # This block would only be hit if we used .get() and it failed.
+        # For robustness, we'll keep the redirect.
+        messages.error(request, "The requested bus does not exist.")
+        return redirect('home')
+    except Exception as e:
+        # Catch any other unexpected errors during seat creation or data fetching
+>>>>>>> cbe2f47e209aa82f888c69a63d2550dcd84878da
         logger.error(f"Error in bus_detail_view for bus_id {bus_id}: {e}", exc_info=True)
         messages.error(request, "An unexpected error occurred while loading bus details. Please try again.")
         return redirect('home')
@@ -132,6 +184,7 @@ def book_seats_view(request, bus_id):
     if request.method == 'POST':
         bus = get_object_or_404(Bus, id=bus_id)
         selected_seat_ids_str = request.POST.get('selected_seat_ids', '')
+<<<<<<< HEAD
         # Get new payment details from the form
         payment_method = request.POST.get('final_payment_method')
         phone_number = request.POST.get('final_phone_number')
@@ -139,6 +192,8 @@ def book_seats_view(request, bus_id):
         # Log payment details (for simulation purposes)
         logger.info(f"User {request.user.username} attempting payment via {payment_method} for phone: {phone_number}")
 
+=======
+>>>>>>> cbe2f47e209aa82f888c69a63d2550dcd84878da
 
         if not selected_seat_ids_str:
             messages.error(request, "No seats selected. Please choose at least one seat.")
@@ -163,7 +218,11 @@ def book_seats_view(request, bus_id):
             total_price *= Decimal('0.90')
             discount_applied = True
 
+<<<<<<< HEAD
         payment_successful = True # This is the simulation - always true here
+=======
+        payment_successful = True
+>>>>>>> cbe2f47e209aa82f888c69a63d2550dcd84878da
 
         if payment_successful:
             for seat in selected_seats:
@@ -175,7 +234,11 @@ def book_seats_view(request, bus_id):
                 bus=bus,
                 total_price=total_price,
                 discount_applied=discount_applied,
+<<<<<<< HEAD
                 payment_status='COMPLETED' # Payment is "completed" after simulation
+=======
+                payment_status='COMPLETED'
+>>>>>>> cbe2f47e209aa82f888c69a63d2550dcd84878da
             )
             booking.booked_seats.set(selected_seats)
 
@@ -191,8 +254,11 @@ def book_seats_view(request, bus_id):
             )
             if discount_applied:
                 message += "A 10% discount was applied to your booking!\n"
+<<<<<<< HEAD
             message += f"\nPayment Method: {payment_method}\n" # Include payment method in email
             message += f"Phone Number: {phone_number}\n" # Include phone number in email
+=======
+>>>>>>> cbe2f47e209aa82f888c69a63d2550dcd84878da
             message += "\nThank you for choosing our service!"
 
             try:
@@ -230,6 +296,7 @@ def my_bookings_view(request):
     return render(request, 'bus_app/my_bookings.html', context)
 
 def about_us_view(request):
+<<<<<<< HEAD
     return render(request, 'bus_app/about_us.html')
 
 def contact_us_view(request):
@@ -241,3 +308,12 @@ def available_bus_view(request):
     buses = Bus.objects.all().order_by('departure_time')
     return render(request, 'bus_app/available_bus.html', {'buses': buses})    
 
+=======
+    """Renders the About Us page."""
+    return render(request, 'bus_app/about_us.html')
+
+def contact_us_view(request):
+    """Renders the Contact Us page."""
+    return render(request, 'bus_app/contact_us.html')
+
+>>>>>>> cbe2f47e209aa82f888c69a63d2550dcd84878da
