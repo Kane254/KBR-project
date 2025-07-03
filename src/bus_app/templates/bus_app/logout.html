@@ -1,0 +1,21 @@
+{# bus_app/templates/bus_app/logout.html #}
+{% extends 'bus_app/base.html' %}
+
+{% block title %}BusConnect Online Booking{% endblock %}
+
+{% block content %}
+    <h1 style="color: #333; margin-bottom: 20px;">You have been logged out.</h1>
+    <p style="font-size: 1.1em; color: #555;">Thank you for using BusConnect.</p>
+    <div style="margin-top: 30px;">
+        <p>
+            <a href="{% url 'login' %}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; transition: background-color 0.3s ease;">
+                Log in again
+            </a>
+        </p>
+        <p>
+            <a href="{% url 'home' %}" style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px; transition: background-color 0.3s ease;">
+                Return to Home
+            </a>
+        </p>
+    </div>
+{% endblock %}

@@ -1,18 +1,51 @@
-# bus_app/forms.py
+# booking_app/forms.py
+
 from django import forms
-from .models import Booking, Route, Trip
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 
-class TripSearchForm(forms.Form):
-    origin = forms.CharField(max_length=100, required=False, label="From")
-    destination = forms.CharField(max_length=100, required=False, label="To")
-    departure_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), required=False)
+class CustomUserCreationForm(UserCreationForm):
+    """A custom form for user registration."""
+    email = forms.EmailField(required=True)
 
-class BookingForm(forms.ModelForm):
-    # This example assumes user picks a seat, in a real app, you'd manage seat availability
-    # You might want to make 'seat_number' a CharField for flexibility (e.g. "A1", "12")
-    seat_number = forms.CharField(max_length=10, help_text="Enter your desired seat number (e.g., A1, 12).")
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = UserCreationForm.Meta.fields + ('email',)
 
-    class Meta:
-        model = Booking
-        fields = ['trip', 'seat_number'] # trip will be set by the view, seat_number by user
-        widgets = {'trip': forms.HiddenInput()} # Hide the trip field, as it's passed via URL/context
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data["email"]
+        if commit:
+            user.save()
+        return user
+    
+
+
+class CustomAuthenticationForm(AuthenticationForm):
+    """A custom form for user login."""
+    username = forms.CharField(label="Username or Email") # Allow login with email or username
+
+    def clean(self):
+        username = self.cleaned_data.get('username')
+        password = self.cleaned_data.get('password')
+
+        if username and password:
+            # Try to authenticate with username
+            self.user_cache = authenticate(self.request, username=username, password=password)
+            if self.user_cache is None:
+                # If not by username, try to authenticate with email
+                try:
+                    user = User.objects.get(email=username)
+                    self.user_cache = authenticate(self.request, username=user.username, password=password)
+                except User.DoesNotExist:
+                    pass
+
+            if self.user_cache is None:
+                raise forms.ValidationError(
+                    self.error_messages['invalid_login'],
+                    code='invalid_login',
+                    params={'username': self.username_field.verbose_name},
+                )
+        return self.cleaned_data
+

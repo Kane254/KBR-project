@@ -1,17 +1,63 @@
 {# bus_app/templates/bus_app/home.html #}
 {% extends 'bus_app/base.html' %}
 
-{% block title %}Welcome{% endblock %}
+{% block title %}BusConnect Online Booking{% endblock %}
 
 {% block content %}
-    <h1>Welcome to BusConnect!</h1>
-    <p>Your one-stop solution for booking bus tickets easily.</p>
-    <p>Find your next trip and book your seat in minutes.</p>
-    <p>
-        <a href="{% url 'bus_list' %}">
-            <button style="padding: 10px 20px; font-size: 1.1em; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                Find Available Buses
-            </button>
-        </a>
-    </p>
+    <section style="text-align: center; padding: 50px 20px; background-color: #f0f8ff; border-radius: 8px; margin-bottom: 30px;">
+        <h1 style="font-size: 2.5em; color: #007bff; margin-bottom: 15px;">YOUR JOURNEY STARTS HERE</h1>
+        <p style="font-size: 1.2em; color: #555; max-width: 800px; margin: 0 auto;">
+            BusConnect makes booking your next bus trip incredibly easy. Find, compare, and book tickets
+            to your favorite destinations across the region with just a few clicks.
+        </p>
+        <div style="margin-top: 30px;">
+            <a href="{% url 'available_bus' %}" style="display: inline-block; padding: 12px 25px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; font-size: 1.1em; transition: background-color 0.3s ease;">
+                Explore Bus Routes/Trips Now
+            </a>
+        </div>
+    </section>
+
+    <section style="padding: 40px 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 30px;">
+        <h2 style="font-size: 2em; color: #333; text-align: center; margin-bottom: 30px;">Why Choose BusConnect?</h2>
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-around; gap: 20px;">
+            <div style="flex: 1; min-width: 280px; max-width: 350px; padding: 20px; background-color: #e6f7ff; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <h3 style="font-size: 1.5em; color: #007bff; margin-bottom: 10px;">Easy Booking</h3>
+                <p style="color: #666;">Our intuitive interface allows you to book tickets in minutes, hassle-free.</p>
+            </div>
+            <div style="flex: 1; min-width: 280px; max-width: 350px; padding: 20px; background-color: #e6f7ff; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <h3 style="font-size: 1.5em; color: #007bff; margin-bottom: 10px;">Real-time Availability</h3>
+                <p style="color: #666;">Get up-to-the-minute information on seat availability and schedules.</p>
+            </div>
+            <div style="flex: 1; min-width: 280px; max-width: 350px; padding: 20px; background-color: #e6f7ff; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <h3 style="font-size: 1.5em; color: #007bff; margin-bottom: 10px;">Secure & Reliable</h3>
+                <p style="color: #666;">Your bookings are secure, and we partner with trusted bus operators.</p>
+            </div>
+        </div>
+    </section>
+
+    <section style="padding: 40px 20px; background-color: #f9f9f9; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <h2 style="font-size: 2em; color: #333; text-align: center; margin-bottom: 30px;">Popular Destinations</h2>
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-around; gap: 20px;">
+            <div style="flex: 1; min-width: 200px; max-width: 280px; text-align: center;">
+                <img src="https://images.unsplash.com/photo-1611348524140-53c9a25263d6?q=80&w=873&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Nairobi" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h3 style="font-size: 1.2em; color: #333;">Nairobi</h3>
+            </div>
+            <div style="flex: 1; min-width: 200px; max-width: 280px; text-align: center;">
+                <img src="https://ajkenyasafaris.com/wp-content/uploads/2023/05/mombasa-bg1.webp" alt="Mombasa" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h3 style="font-size: 1.2em; color: #333;">Mombasa</h3>
+            </div>
+            <div style="flex: 1; min-width: 200px; max-width: 280px; text-align: center;">
+                <img src="https://city.kisumu.go.ke/wp-content/uploads/2024/10/city5-1536x960.jpg" alt="Kisumu" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h3 style="font-size: 1.2em; color: #333;">Kisumu</h3>
+            </div>
+            <div style="flex: 1; min-width: 200px; max-width: 280px; text-align: center;">
+                <img src="https://media.istockphoto.com/id/494709934/photo/eldoret.jpg?s=612x612&w=0&k=20&c=bFbXxOIxL-bPQUph3cbWct6HJpI3QeclXW9rsIeC3gM=" alt="Eldoret" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h3 style="font-size: 1.2em; color: #333;">Eldoret</h3>
+            </div>
+            <div style="flex: 1; min-width: 200px; max-width: 280px; text-align: center;">
+                <img src="https://naxcity.co.ke/wp-content/uploads/2023/02/Slider-6-min.jpg" alt="Nakuru" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h3 style="font-size: 1.2em; color: #333;">Nakuru</h3>
+            </div>
+        </div>
+    </section>
 {% endblock %}

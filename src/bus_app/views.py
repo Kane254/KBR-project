@@ -1,85 +1,243 @@
+# bus_app/views.py
+
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
-from .models import Route, Bus, Trip, Booking
-from .forms import TripSearchForm, BookingForm
+from django.core.mail import send_mail
+from django.conf import settings
+from django.db import transaction
 from django.contrib import messages
-from django.utils import timezone
+from decimal import Decimal
+from django.http import HttpResponse
 
-def home(request):
-    return render(request, 'bus_app/home.html')
+from .models import Bus, Seat, Booking
+from .forms import CustomUserCreationForm, CustomAuthenticationForm
 
-def bus_list(request):
-    form = TripSearchForm(request.GET)
-    trips = Trip.objects.select_related('bus', 'route').filter(departure_time__gte=timezone.now()).order_by('departure_time') # Only future trips
+logger = logging.getLogger(__name__)
 
-    if form.is_valid():
-        origin = form.cleaned_data.get('origin')
-        destination = form.cleaned_data.get('destination')
-        departure_date = form.cleaned_data.get('departure_date')
 
-        if origin:
-            trips = trips.filter(route__origin__icontains=origin)
-        if destination:
-            trips = trips.filter(route__destination__icontains=destination)
-        if departure_date:
-            # Filter by date (ignoring time for the search)
-            trips = trips.filter(departure_time__date=departure_date)
+# --- Authentication Views ---
 
-    context = {
-        'form': form,
-        'trips': trips
-    }
-    return render(request, 'bus_app/bus_list.html', context)
-
-@login_required # User must be logged in to book
-def book_trip(request, trip_id):
-    trip = get_object_or_404(Trip, id=trip_id)
-
-    if trip.available_seats <= 0:
-        messages.error(request, "Sorry, this trip is fully booked.")
-        return redirect('bus_list')
-
+def register_view(request):
+    """Handles user registration and sends a welcome email."""
     if request.method == 'POST':
-        form = BookingForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            seat_number = form.cleaned_data['seat_number']
+            user = form.save()
+            login(request, user)
+            messages.success(request, "Registration successful. Welcome!")
 
-            # Check if seat is already taken for this trip
-            if Booking.objects.filter(trip=trip, seat_number=seat_number).exists():
-                messages.error(request, f"Seat {seat_number} is already taken for this trip. Please choose another.")
-            else:
-                booking = form.save(commit=False)
-                booking.user = request.user
-                booking.trip = trip
-                booking.save()
+            subject = "Welcome to BusBook!"
+            message = (
+                f"Hello {user.username},\n\n"
+                f"Thank you for registering with BusBook! We're excited to have you on board.\n"
+                f"You can now explore bus routes and book your tickets.\n\n"
+                f"Start your journey here: http://127.0.0.1:8000/\n\n" # Adjust URL for deployment
+                f"Best regards,\n"
+                f"The BusBook Team"
+            )
+            try:
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
+                messages.info(request, "A welcome email has been sent to your registered email address.")
+            except Exception as e:
+                logger.error(f"Failed to send welcome email to {user.email}: {e}", exc_info=True)
+                messages.warning(request, "Registration successful, but failed to send welcome email.")
 
-                trip.available_seats -= 1
-                trip.save()
-
-                messages.success(request, f"Booking for {trip.route} on {trip.bus.bus_number} (Seat: {seat_number}) successful!")
-                return redirect('my_bookings') # Redirect to a page showing user's bookings (you'd create this)
+            return redirect('home')
         else:
-            messages.error(request, "Please correct the errors in the form.")
+            messages.error(request, "Registration failed. Please correct the errors.")
     else:
-        # Pre-populate the form with the trip ID if needed, though hidden input handles it
-        form = BookingForm(initial={'trip': trip.id})
+        form = CustomUserCreationForm()
+    return render(request, 'bus_app/register.html', {'form': form})
 
-    context = {
-        'trip': trip,
-        'form': form,
-    }
-    return render(request, 'bus_app/booking_form.html', context)
+def login_view(request):
+    if request.method == 'POST':
+        form = CustomAuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                messages.success(request, f"Welcome back, {user.username}!")
+                return redirect('home')
+            else:
+                messages.error(request, "Invalid username/email or password.")
+        else:
+            messages.error(request, "Invalid username/email or password.")
+    else:
+        form = CustomAuthenticationForm()
+    return render(request, 'bus_app/login.html', {'form': form})
 
 @login_required
-def my_bookings(request):
-    user_bookings = Booking.objects.filter(user=request.user).order_by('-booking_date').select_related('trip__route', 'trip__bus')
+def logout_view(request):
+    logout(request)
+    messages.info(request, "You have been logged out.")
+    return redirect('home')
+
+# --- Bus Booking Views ---
+
+def home_view(request):
+    buses = Bus.objects.all().order_by('departure_time')
+    return render(request, 'bus_app/home.html', {'buses': buses})
+
+@login_required
+def bus_detail_view(request, bus_id):
+    try:
+        bus = get_object_or_404(Bus, id=bus_id)
+        seats = Seat.objects.filter(bus=bus).order_by('seat_number')
+
+        if not seats.exists() or seats.count() < bus.capacity:
+            with transaction.atomic():
+                for i in range(1, bus.capacity + 1):
+                    Seat.objects.get_or_create(bus=bus, seat_number=i)
+            seats = Seat.objects.filter(bus=bus).order_by('seat_number')
+
+        booked_seat_numbers = set(seats.filter(is_booked=True).values_list('seat_number', flat=True))
+
+        seat_layout = []
+        for seat in seats:
+            seat_layout.append({
+                'number': seat.seat_number,
+                'is_booked': seat.is_booked,
+                'id': seat.id
+            })
+
+        context = {
+            'bus': bus,
+            'seat_layout': seat_layout,
+            'booked_seat_numbers': booked_seat_numbers,
+        }
+        return render(request, 'bus_app/bus_detail.html', context)
+
+    except Bus.DoesNotExist:
+        messages.error(request, "The requested bus does not exist.")
+        return redirect('home')
+    except Exception as e:
+        logger.error(f"Error in bus_detail_view for bus_id {bus_id}: {e}", exc_info=True)
+        messages.error(request, "An unexpected error occurred while loading bus details. Please try again.")
+        return redirect('home')
+
+
+@login_required
+@transaction.atomic
+def book_seats_view(request, bus_id):
+    if request.method == 'POST':
+        bus = get_object_or_404(Bus, id=bus_id)
+        selected_seat_ids_str = request.POST.get('selected_seat_ids', '')
+        # Get new payment details from the form
+        payment_method = request.POST.get('final_payment_method')
+        phone_number = request.POST.get('final_phone_number')
+
+        # Log payment details (for simulation purposes)
+        logger.info(f"User {request.user.username} attempting payment via {payment_method} for phone: {phone_number}")
+
+
+        if not selected_seat_ids_str:
+            messages.error(request, "No seats selected. Please choose at least one seat.")
+            return redirect('bus_detail', bus_id=bus.id)
+
+        selected_seat_ids = [int(sid) for sid in selected_seat_ids_str.split(',') if sid.isdigit()]
+        selected_seats = Seat.objects.filter(id__in=selected_seat_ids, bus=bus)
+
+        already_booked_seats = selected_seats.filter(is_booked=True)
+        if already_booked_seats.exists():
+            messages.error(request, "Some of the selected seats are no longer available. Please choose again.")
+            return redirect('bus_detail', bus_id=bus.id)
+
+        num_seats_booked = selected_seats.count()
+        if num_seats_booked == 0:
+            messages.error(request, "No valid seats were selected.")
+            return redirect('bus_detail', bus_id=bus.id)
+
+        total_price = Decimal(num_seats_booked) * bus.fare_per_seat
+        discount_applied = False
+        if num_seats_booked > 5:
+            total_price *= Decimal('0.90')
+            discount_applied = True
+
+        payment_successful = True # This is the simulation - always true here
+
+        if payment_successful:
+            for seat in selected_seats:
+                seat.is_booked = True
+                seat.save()
+
+            booking = Booking.objects.create(
+                user=request.user,
+                bus=bus,
+                total_price=total_price,
+                discount_applied=discount_applied,
+                payment_status='COMPLETED' # Payment is "completed" after simulation
+            )
+            booking.booked_seats.set(selected_seats)
+
+            subject = f"Your Bus Booking Confirmation - {bus.name}"
+            seat_numbers = booking.get_booked_seat_numbers()
+            message = (
+                f"Hello {request.user.username},\n\n"
+                f"Your booking for bus '{bus.name}' on route '{bus.route}' "
+                f"departing at {bus.departure_time.strftime('%Y-%m-%d %H:%M')} has been confirmed!\n\n"
+                f"Seats Booked: {seat_numbers}\n"
+                f"Number of Seats: {num_seats_booked}\n"
+                f"Total Price: Ksh {total_price:.2f}\n"
+            )
+            if discount_applied:
+                message += "A 10% discount was applied to your booking!\n"
+            message += f"\nPayment Method: {payment_method}\n" # Include payment method in email
+            message += f"Phone Number: {phone_number}\n" # Include phone number in email
+            message += "\nThank you for choosing our service!"
+
+            try:
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [request.user.email],
+                    fail_silently=False,
+                )
+                messages.success(request, "Booking successful! A confirmation email has been sent.")
+            except Exception as e:
+                messages.warning(request, f"Booking successful, but failed to send confirmation email: {e}")
+
+            return render(request, 'bus_app/booking_success.html', {
+                'booking': booking,
+                'bus': bus,
+                'selected_seats': selected_seats,
+                'num_seats_booked': num_seats_booked,
+                'total_price': total_price,
+                'discount_applied': discount_applied
+            })
+        else:
+            messages.error(request, "Payment failed. Please try again.")
+            return redirect('bus_detail', bus_id=bus.id)
+    else:
+        return redirect('home')
+
+@login_required
+def my_bookings_view(request):
+    bookings = Booking.objects.filter(user=request.user).order_by('-booking_time')
     context = {
-        'user_bookings': user_bookings
+        'bookings': bookings
     }
     return render(request, 'bus_app/my_bookings.html', context)
 
-# You'll need Django's built-in authentication for login/logout
-# Make sure to configure LOGIN_REDIRECT_URL and LOGOUT_REDIRECT_URL in settings.py
-# Example: LOGIN_REDIRECT_URL = '/'
-#          LOGOUT_REDIRECT_URL = '/'
+def about_us_view(request):
+    return render(request, 'bus_app/about_us.html')
+
+def contact_us_view(request):
+    return render(request, 'bus_app/contact_us.html')
+
+
+def available_bus_view(request):
+    """Renders the Available Buses page."""
+    buses = Bus.objects.all().order_by('departure_time')
+    return render(request, 'bus_app/available_bus.html', {'buses': buses})    
+
