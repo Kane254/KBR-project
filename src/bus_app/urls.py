@@ -13,8 +13,6 @@ urlpatterns = [
     path('my_bookings/', views.my_bookings_view, name='my_bookings'),
     path('about_us/', views.about_us_view, name='about_us'),       # New URL
     path('contact_us/', views.contact_us_view, name='contact_us'),
-<<<<<<< HEAD
     path('available_bus/', views.available_bus_view, name='available_bus'),
-=======
->>>>>>> cbe2f47e209aa82f888c69a63d2550dcd84878da
+
 ]
