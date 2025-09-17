@@ -1,32 +1,14 @@
 {% extends 'bus_app/base.html' %}
 
-
-{% block title %}BusConnect Online Booking{% endblock title %}
-
-{% block content %}
-<h1 class="text-4xl font-bold text-center mb-8 text-blue-800">Select Seats for {{ bus.name }}</h1>
-<p class="text-center text-gray-600 mb-6 text-lg">Route: <span class="font-semibold">{{ bus.route }}</span> | Departure: <span class="font-semibold">{{ bus.departure_time|date:"F j, Y P" }}</span> | Fare: <span class="font-semibold text-green-700">Ksh {{ bus.fare_per_seat }}/seat</span></p>
-
-<div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-xl border border-gray-200">
-    <div class="flex flex-wrap justify-center items-center mb-8 space-x-4 text-lg font-medium">
-        <div class="flex items-center mb-2">
-            <div class="w-7 h-7 bg-gray-300 rounded-md mr-2 shadow-sm"></div>
-            <span>Available</span>
-        </div>
-        <div class="flex items-center mb-2">
-            <div class="w-7 h-7 bg-red-500 rounded-md mr-2 shadow-sm"></div>
-            <span>Booked</span>
-        </div>
-        <div class="flex items-center mb-2">
-            <div class="w-7 h-7 bg-blue-500 rounded-md mr-2 shadow-sm"></div>
-
-{% block title %}Book Seats for {{ bus.name }}{% endblock %}
+{% block title %}Book Seats for {{ bus.name }}{% endblock title %}
 
 {% block content %}
 <h1 class="text-4xl font-bold text-center mb-8 text-blue-800">Select Seats for {{ bus.name }}</h1>
-<p class="text-center text-gray-600 mb-6">Route: {{ bus.route }} | Departure: {{ bus.departure_time|date:"F j, Y P" }} | Fare: Ksh {{ bus.fare_per_seat }}/seat</p>
+<p class="text-center text-gray-600 mb-6">Route: <span class="font-semibold">{{ bus.route }}</span> | Departure: <span class="font-semibold">{{ bus.departure_time|date:"F j, Y P" }}</span> | Fare: <span class="font-semibold text-green-700">Ksh {{ bus.fare_per_seat }}/seat</span>
+</p>
 
 <div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-xl border border-gray-200">
+    <!-- Legend -->
     <div class="flex justify-center items-center mb-6 space-x-4">
         <div class="flex items-center">
             <div class="w-6 h-6 bg-gray-300 rounded-md mr-2"></div>
@@ -38,21 +20,19 @@
         </div>
         <div class="flex items-center">
             <div class="w-6 h-6 bg-blue-500 rounded-md mr-2"></div>
-
             <span>Selected</span>
         </div>
     </div>
 
-    {# Main bus layout container with a 5-column grid for 2-aisle-2 layout #}
+    <!-- Seat Layout -->
     <div class="bus-layout grid grid-cols-5 gap-3 sm:gap-4 p-6 bg-gray-100 rounded-lg border border-gray-300 shadow-inner">
-        <!-- Driver's Area / Front -->
+        <!-- Front of Bus -->
         <div class="col-span-5 text-center py-3 bg-gray-200 rounded-md shadow-sm mb-4">
             <span class="font-bold text-gray-700 text-lg">Front of Bus / Driver</span>
         </div>
 
-        {# Calculate the starting seat number for the last 5-seat row #}
         {% with last_row_start_seat_number=bus.capacity|add:"-4" %}
-            {# Render seats for the main body of the bus (4 seats per row with an aisle) #}
+            <!-- Main body seats (all except last row) -->
             {% for seat in seat_layout %}
                 {% if seat.number < last_row_start_seat_number %}
                     <div class="seat-wrapper flex justify-center items-center">
@@ -67,7 +47,7 @@
                         </div>
                     </div>
                     {% if forloop.counter|divisibleby:2 and forloop.counter < last_row_start_seat_number %}
-                        <div class="col-span-1"></div> {# This creates the aisle space #}
+                        <div class="col-span-1"></div> {# Aisle space #}
                     {% endif %}
                     {% if forloop.counter|divisibleby:4 and forloop.counter < last_row_start_seat_number %}
                         <div class="col-span-5 border-b border-gray-200 my-2"></div>
@@ -75,17 +55,17 @@
                 {% endif %}
             {% endfor %}
 
-            {# Separator before the last row of seats #}
+            <!-- Rear Seats Separator -->
             {% if bus.capacity >= 5 %}
                 <div class="col-span-5 text-center py-2 bg-gray-200 rounded-md shadow-sm my-4">
                     <span class="font-bold text-gray-700 text-base">Rear Seats</span>
                 </div>
             {% endif %}
 
-            {# Render seats for the last row (5 seats across, no aisle) #}
+            <!-- Last row seats -->
             {% for seat in seat_layout %}
                 {% if seat.number >= last_row_start_seat_number %}
-                    <div class="seat-wrapper flex justify-center items-center col-span-1">
+                    <div class="seat-wrapper flex justify-center items-center">
                         <div
                             class="seat w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center rounded-lg shadow-md transition-all duration-200 ease-in-out
                                    {% if seat.is_booked %} bg-red-500 text-white cursor-not-allowed opacity-70 {% else %} bg-gray-300 text-gray-800 hover:bg-gray-400 hover:scale-105 cursor-pointer {% endif %}"
@@ -106,10 +86,9 @@
         </div>
     </div>
 
-    {# --- Payment Section (Initially Hidden) --- #}
+    <!-- Payment Section (Initially Hidden) -->
     <div id="paymentSection" class="mt-8 p-6 bg-blue-50 rounded-lg shadow-inner hidden">
         <h2 class="text-2xl font-bold text-blue-800 mb-4 text-center">Choose Payment Method</h2>
-
         <div class="flex justify-center space-x-6 mb-6">
             <label class="flex items-center cursor-pointer p-4 border-2 border-gray-300 rounded-lg transition-all duration-200 hover:shadow-md has-[:checked]:border-blue-600 has-[:checked]:bg-blue-100">
                 <input type="radio" name="payment_method" value="M-Pesa" class="form-radio h-5 w-5 text-blue-600" id="mpesaRadio">
@@ -122,26 +101,22 @@
                 <img src="https://placehold.co/60x30/FF5722/ffffff?text=Airtel" alt="Airtel Money Logo" class="ml-2 h-8">
             </label>
         </div>
-
         <div id="phoneNumberInputGroup" class="mb-6 hidden">
             <label for="phoneNumber" class="block text-sm font-medium text-gray-700 mb-1">Phone Number (e.g., 07XXXXXXXX)</label>
             <input type="tel" id="phoneNumber" name="phone_number" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base" placeholder="Enter your mobile number" pattern="^(0|254)\d{9}$" required>
             <p class="text-sm text-gray-500 mt-1">Please enter a valid Kenyan mobile number (e.g., 0712345678 or +254712345678).</p>
         </div>
-
         <div id="paymentPromptArea" class="text-center mb-6 hidden">
             <button type="button" id="simulatePromptBtn" class="btn btn-primary py-3 px-6 text-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300">
                 Simulate Payment
             </button>
             <p id="promptMessage" class="text-green-700 font-semibold mt-4 hidden">A payment prompt has been sent to your phone. Please enter your PIN to confirm.</p>
         </div>
-
         <form id="bookingForm" action="{% url 'book_seats' bus.id %}" method="POST" class="mt-8">
             {% csrf_token %}
             <input type="hidden" name="selected_seat_ids" id="selectedSeatIdsInput">
             <input type="hidden" name="final_payment_method" id="finalPaymentMethodInput">
             <input type="hidden" name="final_phone_number" id="finalPhoneNumberInput">
-
             <div class="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
                 <p class="text-xl font-semibold text-gray-800">
                     Selected Seats: <span id="selectedSeatsDisplay" class="font-bold text-blue-600">None</span>
@@ -150,20 +125,18 @@
                     Total Price: <span id="totalPriceDisplay" class="font-bold text-green-600">Ksh 0.00</span>
                 </p>
             </div>
-
             <button type="submit" id="confirmPaymentBtn" class="w-full btn btn-primary py-3 text-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300" disabled>
                 Confirm Payment
             </button>
         </form>
     </div>
-
-    {# Initial "Book Selected Seats" button, which will reveal the payment section #}
+    <!-- Book Selected Seats Button -->
     <button type="button" id="showPaymentSectionBtn" class="w-full btn btn-primary py-3 text-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 mt-8" disabled>
         Book Selected Seats
     </button>
 </div>
 
-{# --- Custom Payment PIN Modal --- #}
+<!-- Payment PIN Modal -->
 <div id="pinModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50 hidden">
     <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-sm mx-4 transform scale-95 opacity-0 transition-all duration-300 ease-out" id="pinModalContent">
         <h2 class="text-2xl font-bold text-center text-blue-800 mb-4">Confirm Payment</h2>
@@ -177,93 +150,34 @@
             <button type="button" id="cancelPinBtn" class="btn btn-secondary py-2 px-6 text-lg shadow-md">Cancel</button>
         </div>
     </div>
-
-    <div class="bus-layout grid grid-cols-4 gap-4 p-6 bg-gray-100 rounded-lg border border-gray-300">
-        <!-- Driver's Area / Front -->
-        <div class="col-span-4 text-center py-4 bg-gray-200 rounded-md shadow-inner mb-4">
-            <span class="font-bold text-gray-700">Front of Bus / Driver</span>
-        </div>
-
-        {% for seat in seat_layout %}
-            <div class="seat-wrapper flex justify-center items-center">
-                <div
-                    class="seat w-16 h-16 flex items-center justify-center rounded-md cursor-pointer
-                           {% if seat.is_booked %} bg-red-500 text-white cursor-not-allowed {% else %} bg-gray-300 text-gray-800 hover:bg-gray-400 transition-colors {% endif %}"
-                    data-seat-id="{{ seat.id }}"
-                    data-seat-number="{{ seat.number }}"
-                    data-is-booked="{{ seat.is_booked|lower }}"
-                >
-                    <span class="font-semibold text-lg">{{ seat.number }}</span>
-                </div>
-            </div>
-            {% if forloop.counter|divisibleby:2 and not forloop.last %}
-                <!-- Add an aisle space after every two seats -->
-                <div class="col-span-2"></div>
-            {% endif %}
-        {% endfor %}
-
-        <!-- Back of Bus -->
-        <div class="col-span-4 text-center py-4 bg-gray-200 rounded-md shadow-inner mt-4">
-            <span class="font-bold text-gray-700">Back of Bus</span>
-        </div>
-    </div>
-
-    <form id="bookingForm" action="{% url 'book_seats' bus.id %}" method="POST" class="mt-8">
-        {% csrf_token %}
-        <input type="hidden" name="selected_seat_ids" id="selectedSeatIdsInput">
-
-        <div class="flex justify-between items-center mb-6">
-            <p class="text-xl font-semibold text-gray-800">
-                Selected Seats: <span id="selectedSeatsDisplay" class="font-bold text-blue-600">None</span>
-            </p>
-            <p class="text-xl font-semibold text-gray-800">
-                Total Price: <span id="totalPriceDisplay" class="font-bold text-green-600">Ksh 0.00</span>
-            </p>
-        </div>
-
-        <button type="submit" id="bookSeatsBtn" class="w-full btn btn-primary py-3 text-xl" disabled>
-            Book Selected Seats
-        </button>
-    </form>
-
 </div>
-   
-{% endblock content %}
+
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
+    const seats = document.querySelectorAll('.seat');
+    const selectedSeatIdsInput = document.getElementById('selectedSeatIdsInput');
+    const selectedSeatsDisplay = document.getElementById('selectedSeatsDisplay');
+    const totalPriceDisplay = document.getElementById('totalPriceDisplay');
+    const showPaymentSectionBtn = document.getElementById('showPaymentSectionBtn');
+    const paymentSection = document.getElementById('paymentSection');
+    const paymentMethodRadios = document.querySelectorAll('input[name="payment_method"]');
+    const phoneNumberInputGroup = document.getElementById('phoneNumberInputGroup');
+    const phoneNumberInput = document.getElementById('phoneNumber');
+    const paymentPromptArea = document.getElementById('paymentPromptArea');
+    const simulatePromptBtn = document.getElementById('simulatePromptBtn');
+    const promptMessage = document.getElementById('promptMessage');
+    const confirmPaymentBtn = document.getElementById('confirmPaymentBtn');
+    const finalPaymentMethodInput = document.getElementById('finalPaymentMethodInput');
+    const finalPhoneNumberInput = document.getElementById('finalPhoneNumberInput');
+    // Modal elements
+    const pinModal = document.getElementById('pinModal');
+    const pinModalContent = document.getElementById('pinModalContent');
+    const pinInput = document.getElementById('pinInput');
+    const confirmPinBtn = document.getElementById('confirmPinBtn');
+    const cancelPinBtn = document.getElementById('cancelPinBtn');
 
-        console.log('DOM Content Loaded. Initializing seat selection and payment script.');
-
-
-        const seats = document.querySelectorAll('.seat');
-        const selectedSeatIdsInput = document.getElementById('selectedSeatIdsInput');
-        const selectedSeatsDisplay = document.getElementById('selectedSeatsDisplay');
-        const totalPriceDisplay = document.getElementById('totalPriceDisplay');
-
-        const showPaymentSectionBtn = document.getElementById('showPaymentSectionBtn');
-
-        const paymentSection = document.getElementById('paymentSection');
-        const paymentMethodRadios = document.querySelectorAll('input[name="payment_method"]');
-        const phoneNumberInputGroup = document.getElementById('phoneNumberInputGroup');
-        const phoneNumberInput = document.getElementById('phoneNumber');
-        const paymentPromptArea = document.getElementById('paymentPromptArea');
-        const simulatePromptBtn = document.getElementById('simulatePromptBtn');
-        const promptMessage = document.getElementById('promptMessage');
-        const confirmPaymentBtn = document.getElementById('confirmPaymentBtn');
-
-        const finalPaymentMethodInput = document.getElementById('finalPaymentMethodInput');
-        const finalPhoneNumberInput = document.getElementById('finalPhoneNumberInput');
-
-        // Modal elements
-        const pinModal = document.getElementById('pinModal');
-        const pinModalContent = document.getElementById('pinModalContent');
-        const pinInput = document.getElementById('pinInput');
-        const confirmPinBtn = document.getElementById('confirmPinBtn');
-        const cancelPinBtn = document.getElementById('cancelPinBtn');
-
-
-    let selectedSeats = new Set(); // Stores seat IDs
+    let selectedSeats = new Set();
 
     const farePerSeat = parseFloat("{{ bus.fare_per_seat|default:'0.00'|floatformat:2 }}".replace(/[^0-9.]/g, ''));
     if (isNaN(farePerSeat)) {
@@ -272,57 +186,33 @@
         return;
     }
 
-        function updateBookingDetails() {
-            console.log('Updating booking details. Current selectedSeats:', Array.from(selectedSeats));
+    function updateBookingDetails() {
+        const numSelected = selectedSeats.size;
+        let totalPrice = numSelected * farePerSeat;
+        let discountApplied = false;
 
-        const bookSeatsBtn = document.getElementById('bookSeatsBtn');
-
-        let selectedSeats = new Set(); // Stores seat IDs
-
-        const farePerSeat = parseFloat("{{ bus.fare_per_seat }}"); // Get fare from Django context
-
-        function updateBookingDetails() {
-            const numSelected = selectedSeats.size;
-            let totalPrice = numSelected * farePerSeat;
-            let discountApplied = false;
-
-            if (numSelected > 5) {
-
-                totalPrice *= 0.90;
-                discountApplied = true;
-                console.log('Discount applied! New total price:', totalPrice.toFixed(2));
-            }
-
-
-                totalPrice *= 0.90; // Apply 10% discount
-                discountApplied = true;
-            }
-
-            // Update selected seats display
-
-            const seatNumbers = Array.from(selectedSeats).map(id => {
-                const seatElement = document.querySelector(`[data-seat-id="${id}"]`);
-                return seatElement ? seatElement.dataset.seatNumber : '';
-            }).filter(Boolean).join(', ');
-            selectedSeatsDisplay.textContent = seatNumbers || 'None';
-
-
-            // Update total price display
-
-            totalPriceDisplay.textContent = `Ksh ${totalPrice.toFixed(2)}`;
-            if (discountApplied) {
-                totalPriceDisplay.innerHTML += ' <span class="text-sm text-red-500">(10% Discount Applied!)</span>';
-            }
-
-
-            if (numSelected > 0) {
-                showPaymentSectionBtn.removeAttribute('disabled');
-                console.log('Show payment section button enabled.');
-            } else {
-                showPaymentSectionBtn.setAttribute('disabled', 'disabled');
-                console.log('Show payment section button disabled.');
-            }
+        if (numSelected > 5) {
+            totalPrice *= 0.90;
+            discountApplied = true;
         }
+
+        const seatNumbers = Array.from(selectedSeats).map(id => {
+            const seatElement = document.querySelector(`[data-seat-id="${id}"]`);
+            return seatElement ? seatElement.dataset.seatNumber : '';
+        }).filter(Boolean).join(', ');
+        selectedSeatsDisplay.textContent = seatNumbers || 'None';
+
+        totalPriceDisplay.innerHTML = `Ksh ${totalPrice.toFixed(2)}`;
+        if (discountApplied) {
+            totalPriceDisplay.innerHTML += ' <span class="text-sm text-red-500">(10% Discount Applied!)</span>';
+        }
+
+        if (numSelected > 0) {
+            showPaymentSectionBtn.removeAttribute('disabled');
+        } else {
+            showPaymentSectionBtn.setAttribute('disabled', 'disabled');
+        }
+    }
 
     function updatePaymentState() {
         const selectedMethod = document.querySelector('input[name="payment_method"]:checked');
@@ -343,78 +233,49 @@
         promptMessage.classList.add('hidden');
         confirmPaymentBtn.setAttribute('disabled', 'disabled');
         simulatePromptBtn.textContent = 'Simulate Payment Prompt';
-        pinInput.value = ''; // Clear PIN input when state changes
+        pinInput.value = '';
     }
 
-        seats.forEach(seat => {
-            const isBooked = seat.dataset.isBooked === 'true';
-            if (!isBooked) {
-                seat.addEventListener('click', function() {
-                    const seatId = parseInt(this.dataset.seatId);
-                    if (selectedSeats.has(seatId)) {
-                        selectedSeats.delete(seatId);
-                        this.classList.remove('bg-blue-500', 'text-white', 'scale-110');
-                        this.classList.add('bg-gray-300', 'text-gray-800', 'hover:bg-gray-400');
-                    } else {
-                        selectedSeats.add(seatId);
-                        this.classList.remove('bg-gray-300', 'text-gray-800', 'hover:bg-gray-400');
-                        this.classList.add('bg-blue-500', 'text-white', 'scale-110');
-                    }
-                    updateBookingDetails();
-                    // Reset payment section if seats change
-                    paymentSection.classList.add('hidden');
-                    showPaymentSectionBtn.classList.remove('hidden');
-                    confirmPaymentBtn.setAttribute('disabled', 'disabled');
-                    promptMessage.classList.add('hidden');
-                    simulatePromptBtn.textContent = 'Simulate Payment Prompt';
-                    paymentMethodRadios.forEach(radio => radio.checked = false);
-                    phoneNumberInput.value = '';
-                    phoneNumberInputGroup.classList.add('hidden');
-                    paymentPromptArea.classList.add('hidden');
-                    hidePinModal(); // Ensure modal is hidden
-
-            // Enable/disable book button
-            if (numSelected > 0) {
-                bookSeatsBtn.removeAttribute('disabled');
-            } else {
-                bookSeatsBtn.setAttribute('disabled', 'disabled');
-            }
+    // Seat selection logic
+    seats.forEach(seat => {
+        const isBooked = seat.dataset.isBooked === 'true';
+        if (!isBooked) {
+            seat.addEventListener('click', function() {
+                const seatId = parseInt(this.dataset.seatId);
+                if (selectedSeats.has(seatId)) {
+                    selectedSeats.delete(seatId);
+                    this.classList.remove('bg-blue-500', 'text-white', 'scale-110');
+                    this.classList.add('bg-gray-300', 'text-gray-800', 'hover:bg-gray-400');
+                } else {
+                    selectedSeats.add(seatId);
+                    this.classList.remove('bg-gray-300', 'text-gray-800', 'hover:bg-gray-400');
+                    this.classList.add('bg-blue-500', 'text-white', 'scale-110');
+                }
+                updateBookingDetails();
+                paymentSection.classList.add('hidden');
+                showPaymentSectionBtn.classList.remove('hidden');
+                confirmPaymentBtn.setAttribute('disabled', 'disabled');
+                promptMessage.classList.add('hidden');
+                simulatePromptBtn.textContent = 'Simulate Payment Prompt';
+                paymentMethodRadios.forEach(radio => radio.checked = false);
+                phoneNumberInput.value = '';
+                phoneNumberInputGroup.classList.add('hidden');
+                paymentPromptArea.classList.add('hidden');
+                hidePinModal();
+            });
         }
+    });
 
-        seats.forEach(seat => {
-            if (seat.dataset.isBooked === 'false') { // Only interact with available seats
-                seat.addEventListener('click', function() {
-                    const seatId = parseInt(this.dataset.seatId);
-
-                    if (selectedSeats.has(seatId)) {
-                        // Deselect seat
-                        selectedSeats.delete(seatId);
-                        this.classList.remove('bg-blue-500', 'text-white');
-                        this.classList.add('bg-gray-300', 'text-gray-800', 'hover:bg-gray-400');
-                    } else {
-                        // Select seat
-                        selectedSeats.add(seatId);
-                        this.classList.remove('bg-gray-300', 'text-gray-800', 'hover:bg-gray-400');
-                        this.classList.add('bg-blue-500', 'text-white');
-                    }
-                    updateBookingDetails();
-
-                });
-            }
-        });
-
-
-        showPaymentSectionBtn.addEventListener('click', function() {
-            if (selectedSeats.size === 0) {
-                // Using a custom modal instead of alert()
-                showCustomAlert('Please select at least one seat to book.');
-                return;
-            }
-            this.classList.add('hidden');
-            paymentSection.classList.remove('hidden');
-            paymentPromptArea.classList.remove('hidden');
-            updatePaymentState();
-        });
+    showPaymentSectionBtn.addEventListener('click', function() {
+        if (selectedSeats.size === 0) {
+            showCustomAlert('Please select at least one seat to book.');
+            return;
+        }
+        this.classList.add('hidden');
+        paymentSection.classList.remove('hidden');
+        paymentPromptArea.classList.remove('hidden');
+        updatePaymentState();
+    });
 
     paymentMethodRadios.forEach(radio => {
         radio.addEventListener('change', updatePaymentState);
@@ -425,7 +286,7 @@
 
     simulatePromptBtn.addEventListener('click', function() {
         if (phoneNumberInput.checkValidity()) {
-            showPinModal(); // Show the custom PIN modal
+            showPinModal();
             this.textContent = 'Prompt Sent!';
             this.setAttribute('disabled', 'disabled');
         } else {
@@ -511,23 +372,7 @@
         finalPhoneNumberInput.value = phoneNumberInput.value;
     });
 
-        updateBookingDetails(); // Initial update on page load
-    });
+    updateBookingDetails();
+});
 </script>
 {% endblock content %}
-
-        // Update hidden input field before form submission
-        document.getElementById('bookingForm').addEventListener('submit', function(event) {
-            if (selectedSeats.size === 0) {
-                alert('Please select at least one seat to book.'); // Use a custom modal in production
-                event.preventDefault(); // Stop form submission
-                return;
-            }
-            selectedSeatIdsInput.value = Array.from(selectedSeats).join(',');
-        });
-
-        // Initial update on page load
-        updateBookingDetails();
-    });
-</script>
-{% endblock %}
