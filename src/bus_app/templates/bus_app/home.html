@@ -1,6 +1,6 @@
 {% extends 'bus_app/base.html' %}
 
-<<<<<<< HEAD
+
 {% block title %}BusConnect Online Booking{% endblock %}
 
 {% block content %}
@@ -61,32 +61,3 @@
         </div>
     </section>
 {% endblock %}
-=======
-{% block title %}Available Buses{% endblock title %} {# THIS IS THE ONLY BLOCK TITLE IN THIS FILE #}
-
-{% block content %}
-<h1 class="text-4xl font-bold text-center mb-8 text-blue-800">Available Bus Routes</h1>
-
-{% if buses %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {% for bus in buses %}
-            <div class="bg-white p-6 rounded-lg shadow-xl hover:shadow-2xl transition-shadow duration-300 border border-gray-200 flex flex-col justify-between">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-900 mb-3">{{ bus.name }}</h2>
-                    <p class="text-gray-700 mb-1"><strong class="text-blue-700">Route:</strong> {{ bus.route }}</p>
-                    <p class="text-gray-700 mb-1"><strong class="text-blue-700">Departure:</strong> {{ bus.departure_time|date:"F j, Y P" }}</p>
-                    <p class="text-gray-700 mb-1"><strong class="text-blue-700">Capacity:</strong> {{ bus.capacity }} seats</p>
-                    <p class="text-gray-700 mb-4 text-xl font-semibold"><strong class="text-green-700">Fare:</strong> Ksh {{ bus.fare_per_seat }}/seat</p>
-                </div>
-                <a href="{% url 'bus_detail' bus.id %}" class="w-full btn btn-primary text-center mt-4 py-3 text-lg">View Seats & Book</a>
-            </div>
-        {% endfor %}
-    </div>
-{% else %}
-    <div class="flex flex-col items-center justify-center py-20">
-        <p class="text-center text-gray-600 text-2xl mb-4">No buses available at the moment.</p>
-        <p class="text-center text-gray-500 text-lg">Please check back later!</p>
-    </div>
-{% endif %}
-{% endblock content %} {# Make sure this is present and correctly spelled #}
->>>>>>> cbe2f47e209aa82f888c69a63d2550dcd84878da
